@@ -5,6 +5,8 @@ import {
   signInAnonymously,
   signInWithCustomToken,
   onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -17,7 +19,7 @@ const firebaseConfig = {
   messagingSenderId: "764039659582",
   appId: "1:764039659582:web:2439da1b1f8940da83d16f",
   // Optionally, add custom token here if needed
-  // __initial_auth_token: "YOUR_CUSTOM_TOKEN"
+  __initial_auth_token: "YOUR_CUSTOM_TOKEN",
 };
 
 const App = () => {
@@ -44,28 +46,6 @@ const App = () => {
         }
         setIsAuthReady(true);
       });
-
-      // Attempt authentication using custom token or anonymously
-      const authenticate = async () => {
-        try {
-          if (
-            typeof firebaseConfig.__initial_auth_token !== "undefined" &&
-            firebaseConfig.__initial_auth_token
-          ) {
-            await signInWithCustomToken(
-              userAuth,
-              firebaseConfig.__initial_auth_token
-            );
-          } else {
-            await signInAnonymously(userAuth);
-          }
-        } catch (authError) {
-          setError("Failed to sign in. See console for details.");
-          setIsAuthReady(true);
-        }
-      };
-
-      authenticate();
 
       return () => unsubscribe();
     } catch (e) {
@@ -136,6 +116,25 @@ const App = () => {
       </>
     );
   };
+  const signInWithGoogle = async () => {
+    try {
+      // Use signInWithPopup to open the Google sign-in window
+      const auth = getAuth();
+      const googleProvider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, googleProvider);
+
+      // The user info is available in result.user
+      const user = result.user;
+      console.log("Successfully signed in:", user.displayName);
+      setUserId(user.uid);
+      setError(null);
+      setIsAuthReady(true);
+      // You can now redirect the user or update your UI state
+    } catch (error) {
+      // Handle Errors here
+      console.error("Google sign-in error:", error.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex items-start justify-center">
@@ -144,6 +143,9 @@ const App = () => {
           React + Firebase Starter
         </h1>
         {renderContent()}
+        {!isAuthReady && (
+          <button onClick={signInWithGoogle}>Sign In with Google</button>
+        )}
       </div>
     </div>
   );
