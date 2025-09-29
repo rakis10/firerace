@@ -3,13 +3,11 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Trigger the workflow every time you push to the `main` branch
   push:
     branches: [ main ]
-  # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
-# Allow this job to clone the repo and create a page deployment
+# Grant permissions to read contents and deploy pages
 permissions:
   contents: read
   pages: write
@@ -17,7 +15,6 @@ permissions:
 
 # Configure deployment environment
 pages:
-  # This is required for the deploy-pages action
   build:
     runs-on: ubuntu-latest
   
@@ -25,40 +22,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout your repository using git
+      - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Install, build, and upload your site
-        # This action handles node, installs dependencies, and runs the build command (e.g., 'npm run build')
+      - name: Install and Build with Astro
+        # This step handles:
+        # 1. Installing Node.js
+        # 2. Installing dependencies (npm install, yarn, or pnpm)
+        # 3. Running the build command (npm run build)
+        # 4. Uploading the 'dist' (or 'out') directory as the 'github-pages' artifact
         uses: withastro/action@v3
-        # The output path of the build will be the directory used in the next step.
-        
-      # CRITICAL: Upload the built site files as an artifact
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          # The artifact name must match what the deploy job expects
-          name: github-pages 
-          # The path to your build output directory (Astro's default is often 'dist' or 'out')
-          path: dist 
 
   deploy:
-    # Ensure the build job completes successfully before starting deployment
+    # Runs only after the build job is successful
     needs: build 
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # CRITICAL: Download the artifact uploaded by the build job
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages
-          
       - name: Deploy to GitHub Pages
         id: deployment
+        # This action automatically downloads and deploys the 'github-pages' artifact
         uses: actions/deploy-pages@v4
-        with:
-          # Specify the path to the downloaded artifact
-          artifact_path: github-pages
