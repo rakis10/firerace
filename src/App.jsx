@@ -141,7 +141,7 @@ const App = () => {
     <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex items-start justify-center">
       <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-6 sm:p-8">
         <h1 className="text-3xl font-extrabold text-indigo-900 mb-6 border-b pb-3">
-          React + Firebase Starter
+          React + Firebase Starter#
         </h1>
         {renderContent()}
       </div>
