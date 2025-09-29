@@ -1,41 +1,34 @@
-# .github/workflows/deploy.yml
-
 name: Deploy to GitHub Pages
 
 on:
+  # Trigger the workflow every time you push to the `main` branch
+  # Using a different branch name? Replace `main` with your branch’s name
   push:
     branches: [ main ]
+  # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
-# Grant permissions to read contents and deploy pages
+# Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Configure deployment environment
-pages:
-  build:
-    runs-on: ubuntu-latest
-  
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout your repository using git
         uses: actions/checkout@v4
-        
-      - name: Install and Build with Astro
-        # This step handles:
-        # 1. Installing Node.js
-        # 2. Installing dependencies (npm install, yarn, or pnpm)
-        # 3. Running the build command (npm run build)
-        # 4. Uploading the 'dist' (or 'out') directory as the 'github-pages' artifact
+      - name: Install, build, and upload your site
         uses: withastro/action@v3
+        # with:
+          # path: . # The root location of your Astro project inside the repository. (optional)
+          # node-version: 20 # The specific version of Node that should be used to build your site. Defaults to 20. (optional)
+          # package-manager: pnpm@latest # The Node package manager that should be used to install dependencies and build your site. Automatically detected based on your lockfile. (optional)
 
   deploy:
-    # Runs only after the build job is successful
-    needs: build 
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -43,5 +36,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        # This action automatically downloads and deploys the 'github-pages' artifact
         uses: actions/deploy-pages@v4
