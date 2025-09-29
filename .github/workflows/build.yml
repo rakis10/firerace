@@ -1,8 +1,9 @@
+# .github/workflows/deploy.yml
+
 name: Deploy to GitHub Pages
 
 on:
   # Trigger the workflow every time you push to the `main` branch
-  # Using a different branch name? Replace `main` with your branch’s name
   push:
     branches: [ main ]
   # Allows you to run this workflow manually from the Actions tab on GitHub.
@@ -14,32 +15,50 @@ permissions:
   pages: write
   id-token: write
 
-# Required for GitHub Pages deployment
+# Configure deployment environment
 pages:
   # This is required for the deploy-pages action
   build:
     runs-on: ubuntu-latest
-
+  
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
+        
       - name: Install, build, and upload your site
+        # This action handles node, installs dependencies, and runs the build command (e.g., 'npm run build')
         uses: withastro/action@v3
-        # with:
-          # path: . # The root location of your Astro project inside the repository. (optional)
-          # node-version: 20 # The specific version of Node that should be used to build your site. Defaults to 20. (optional)
-          # package-manager: pnpm@latest # The Node package manager that should be used to install dependencies and build your site. Automatically detected based on your lockfile. (optional)
+        # The output path of the build will be the directory used in the next step.
+        
+      # CRITICAL: Upload the built site files as an artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # The artifact name must match what the deploy job expects
+          name: github-pages 
+          # The path to your build output directory (Astro's default is often 'dist' or 'out')
+          path: dist 
 
   deploy:
-    needs: build
+    # Ensure the build job completes successfully before starting deployment
+    needs: build 
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # CRITICAL: Download the artifact uploaded by the build job
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # Specify the path to the downloaded artifact
+          artifact_path: github-pages
